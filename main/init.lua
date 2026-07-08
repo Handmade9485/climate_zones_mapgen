@@ -35,6 +35,7 @@ local np_humidity = {
 }
 
 local gen_data = {
+	size = 0,
 	heatmap = {},
 	humidmap = {},
 	heightmap = {},
@@ -202,125 +203,105 @@ local function get_plateau_noise(x, y)
 	return sum / w_sum
 end
 
+local function trace_river(start_i, sidelen, cache)
+	local river = {}
+	local i = start_i
+
+	while true do
+		if cache[i] and #cache[i] == 0 then
+			return {} -- invalid rivulet
+		elseif cache[i] and #cache[i] > 0 then
+			table.move(cache[i], 1, #cache[i], #river + 1, river)
+			return river
+		end
+
+		table.insert(river, i)
+
+		local best_neighbor = nil
+		local lowest_height = 999
+
+		for oz = -1, 1 do
+		for ox = -1, 1 do
+			local n_i = i + ox + oz * sidelen
+			-- touches chunk boundary = discard
+			if n_i <= 1 or n_i >= gen_data.size then
+				return {}
+			end
+
+			local new_height = gen_data.heightmap[n_i]
+
+			if new_height < lowest_height then
+				lowest_height = new_height
+				best_neighbor = n_i
+			end
+		end
+		end
+
+		if best_neighbor == i or lowest_height <= 0 then
+			return river
+		end
+
+		i = best_neighbor
+	end
+end
+
 local function get_rivers(sidelen)
-	for z = 2, sidelen - 2 do
-	for x = 2, sidelen - 2 do
-		local i = x + z * sidelen
-		local height = gen_data.heightmap[i]
-		local higher_neighbors = 0
-
-		local river = {}
-
-		local steepest_neighbor = i
-		local max_steepness = -1
-		local second_steepness = -1
-
-		for n_z = z-1, z+1 do
-		for n_x = x-1, x+1 do
-		if n_x ~= x or n_z ~= z then
-			local n_i = n_x + n_z * sidelen
-			local new_steepness = gen_data.heightmap[n_i] - height
-			if new_steepness > 0 then
-				higher_neighbors = higher_neighbors + 1
-			end
-			if new_steepness > max_steepness then
-				second_steepness = max_steepness
-				max_steepness = new_steepness
-				steepest_neighbor = n_i
-			end
-		end
-		end
-		end
-
-		if higher_neighbors == 8 then
-		while i >= 1 and i <= #gen_data.rivers and gen_data.heightmap[i] > 0 do
-			table.insert(river, i)
-
-			local best_neighbor = nil
-			local best_drop = -math.huge
-
-			local ix = i % sidelen
-			local iz = math.floor(i / sidelen)
-
-			for o_z = -1, 1 do
-			for o_x = -1, 1 do
-			if o_x ~= 0 or o_z ~= 0 then
-				local nx = ix + o_x
-				local nz = iz + o_z
-
-				if nx >= 2 and nx <= sidelen - 2 and nz >= 2 and nz <= sidelen - 2 then
-					local n_i = nx + nz * sidelen
-
-					-- Find where this neighbor would naturally flow.
-					local lowest = n_i
-					local biggest_drop = 0
-
-					for p_z = -1, 1 do
-					for p_x = -1, 1 do
-						if p_x ~= 0 or p_z ~= 0 then
-							local nn_i = n_i + p_x + p_z * sidelen
-							local drop = gen_data.heightmap[n_i] - gen_data.heightmap[nn_i]
-
-							if drop > biggest_drop then
-								biggest_drop = drop
-								lowest = nn_i
-							end
-						end
-					end
-					end
-
-					-- Does this neighbor drain into us?
-					if lowest == i then
-						local drop = gen_data.heightmap[n_i] - gen_data.heightmap[i]
-						if drop > best_drop then
-							best_drop = drop
-							best_neighbor = n_i
-						end
-					end
-				end
-			end
-			end
-			end
-
-			if not best_neighbor then
-				break
-			end
-
-			i = best_neighbor
-		end
-		end
-
-		if #river >= 10 then
-			local widened = {}
-			for _, r_i in pairs(river) do
-			if r_i >= 2 and r_i + 1 <= #gen_data.rivers and gen_data.heightmap[r_i-1] > gen_data.heightmap[r_i+1] then
-				table.insert(widened, r_i+1)
-			elseif r_i >= 2 and r_i + 1 <= #gen_data.rivers and gen_data.heightmap[r_i-1] <= gen_data.heightmap[r_i+1] then
-				table.insert(widened, r_i+1)
-			end
-			if r_i - sidelen >= 1 and r_i + sidelen <= #gen_data.rivers and gen_data.heightmap[r_i-sidelen] > gen_data.heightmap[r_i+sidelen] then
-				table.insert(widened, r_i+sidelen)
-			elseif r_i - sidelen >= 1 and r_i + sidelen <= #gen_data.rivers and gen_data.heightmap[r_i-sidelen] <= gen_data.heightmap[r_i+sidelen] then
-				table.insert(widened, r_i+sidelen)
-			end
-			end
-			for _, w_i in pairs(widened) do
-				table.insert(river, w_i)
-			end
-
-			for _, r_i in pairs(river) do
-				gen_data.rivers[r_i] = true
-				for o_x = -2, 2 do
-				for o_z = -2, 2 do
-					local n_i = r_i + o_x + o_z * sidelen
-					if n_i >= 1 and n_i <= #gen_data.humidmap then
-						gen_data.humidmap[n_i] = 1 - (1 - gen_data.humidmap[n_i]) * 0.95
-					end
-				end
-				end
-			end
+	local longest_river = {}
+	local cache = {}
+	for i = 1, gen_data.size do
+		local river = trace_river(i, sidelen, cache)
+		cache[i] = river;
+		if river and #river > #longest_river then
+			longest_river = river
 		end
 	end
+
+	local height_diff = 0
+	if #longest_river >= 2 then
+		local source = longest_river[1]
+		local sink = longest_river[#longest_river]
+		height_diff = gen_data.heightmap[source] - gen_data.heightmap[sink]
+	end
+
+	if height_diff > (1 / #longest_river) then
+		for i = 1, #longest_river - 1 do
+			local h1 = gen_data.heightmap[i]
+			local h2 = gen_data.heightmap[i+1]
+			local diff = h1 - h2
+			gen_data.heightmap[i] = gen_data.heightmap[i] - .25 * diff
+			gen_data.heightmap[i+1] = gen_data.heightmap[i+1] + .20 * diff
+		end
+
+		local river_banks = {}
+		for _, r_i in pairs(longest_river) do
+			if r_i >= 2 and r_i + 1 <= gen_data.size and gen_data.heightmap[r_i-1] > gen_data.heightmap[r_i+1] then
+				table.insert(river_banks, r_i+1)
+				gen_data.heightmap[r_i+1] = gen_data.heightmap[r_i]
+			elseif r_i >= 2 and r_i + 1 <= gen_data.size and gen_data.heightmap[r_i-1] <= gen_data.heightmap[r_i+1] then
+				table.insert(river_banks, r_i-1)
+				gen_data.heightmap[r_i-1] = gen_data.heightmap[r_i]
+			end
+			if r_i - sidelen >= 1 and r_i + sidelen <= gen_data.size and gen_data.heightmap[r_i-sidelen] > gen_data.heightmap[r_i+sidelen] then
+				table.insert(river_banks, r_i + sidelen)
+				gen_data.heightmap[r_i + sidelen] = gen_data.heightmap[r_i]
+			elseif r_i - sidelen >= 1 and r_i + sidelen <= gen_data.size and gen_data.heightmap[r_i-sidelen] <= gen_data.heightmap[r_i+sidelen] then
+				table.insert(river_banks, r_i - sidelen)
+				gen_data.heightmap[r_i - sidelen] = gen_data.heightmap[r_i]
+			end
+		end
+		table.move(river_banks, 1, #river_banks, #longest_river + 1, longest_river)
+
+		for _, r_i in pairs(longest_river) do
+			gen_data.rivers_depths[r_i] = 1
+			for o_x = -2, 2 do
+			for o_z = -2, 2 do
+				local n_i = r_i + o_x + o_z * sidelen
+				if n_i >= 1 and n_i <= #gen_data.humidmap then
+					gen_data.humidmap[n_i] = 1 - (1 - gen_data.humidmap[n_i]) * 0.95
+				end
+			end
+			end
+		end
 	end
 end
 
@@ -340,10 +321,11 @@ core.register_on_generated(function(minp, maxp, seed)
 	local area = VoxelArea:new{MinEdge = emin, MaxEdge = emax}
 	vm:get_data(data)
 
+	gen_data.size = 0
 	gen_data.heatmap = {}
 	gen_data.humidmap = {}
 	gen_data.heightmap = {}
-	gen_data.rivers = {}
+	gen_data.rivers_depths = {}
 
 	local ni = 1
 	for z = minp.z, maxp.z do
@@ -358,11 +340,10 @@ core.register_on_generated(function(minp, maxp, seed)
 		gen_data.heatmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_heat) * 100 * (1-gen_data.heightmap[ni]^3)
 		gen_data.humidmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_humidity) * 100
 
-		gen_data.rivers[ni] = false
-
 		ni = ni + 1
 	end
 	end
+	gen_data.size = #gen_data.heatmap
 
 	get_rivers(sidelen)
 
@@ -370,18 +351,13 @@ core.register_on_generated(function(minp, maxp, seed)
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		local node_height = math.floor(gen_data.heightmap[ni] * HEIGHT_SCALE)
-		local is_river = gen_data.rivers[ni]
-		-- sink rivers into the ground
-		if is_river and node_height > 1 then
-			node_height = node_height - 1
-		end
 
 		for y = minp.y, maxp.y do
 			local vi = area:index(x, y, z)
 
 			if y <= 0 and y > node_height then
 				data[vi] = c_water
-			elseif y == node_height and y > 0 and is_river then
+			elseif gen_data.rivers_depths[ni] and y > 0 and y <= node_height and y > node_height - gen_data.rivers_depths[ni] then
 				data[vi] = c_river
 			elseif y <= node_height then
 				data[vi] = c_stone
