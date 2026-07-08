@@ -34,6 +34,13 @@ local np_humidity = {
 	octaves = 1,
 }
 
+local gen_data = {
+	heatmap = {},
+	humidmap = {},
+	heightmap = {},
+	rivers = {},
+}
+
 -- Initialize noise object to nil. It will be created once only during the
 -- generation of the first mapchunk, to minimise memory use.
 local nobj_terrain = nil
@@ -195,11 +202,11 @@ local function get_plateau_noise(x, y)
 	return sum / w_sum
 end
 
-local function get_rivers(sidelen, heightmap, humidmap, rivers)
+local function get_rivers(sidelen)
 	for z = 2, sidelen - 2 do
 	for x = 2, sidelen - 2 do
 		local i = x + z * sidelen
-		local height = heightmap[i]
+		local height = gen_data.heightmap[i]
 		local higher_neighbors = 0
 
 		local river = {}
@@ -212,7 +219,7 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 		for n_x = x-1, x+1 do
 		if n_x ~= x or n_z ~= z then
 			local n_i = n_x + n_z * sidelen
-			local new_steepness = heightmap[n_i] - height
+			local new_steepness = gen_data.heightmap[n_i] - height
 			if new_steepness > 0 then
 				higher_neighbors = higher_neighbors + 1
 			end
@@ -226,7 +233,7 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 		end
 
 		if higher_neighbors == 8 then
-		while i >= 1 and i <= #rivers do
+		while i >= 1 and i <= #gen_data.rivers and gen_data.heightmap[i] > 0 do
 			table.insert(river, i)
 
 			local best_neighbor = nil
@@ -252,7 +259,7 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 					for p_x = -1, 1 do
 						if p_x ~= 0 or p_z ~= 0 then
 							local nn_i = n_i + p_x + p_z * sidelen
-							local drop = heightmap[n_i] - heightmap[nn_i]
+							local drop = gen_data.heightmap[n_i] - gen_data.heightmap[nn_i]
 
 							if drop > biggest_drop then
 								biggest_drop = drop
@@ -264,7 +271,7 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 
 					-- Does this neighbor drain into us?
 					if lowest == i then
-						local drop = heightmap[n_i] - heightmap[i]
+						local drop = gen_data.heightmap[n_i] - gen_data.heightmap[i]
 						if drop > best_drop then
 							best_drop = drop
 							best_neighbor = n_i
@@ -286,14 +293,14 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 		if #river >= 10 then
 			local widened = {}
 			for _, r_i in pairs(river) do
-			if r_i >= 2 and r_i + 1 <= #rivers and heightmap[r_i-1] > heightmap[r_i+1] then
+			if r_i >= 2 and r_i + 1 <= #gen_data.rivers and gen_data.heightmap[r_i-1] > gen_data.heightmap[r_i+1] then
 				table.insert(widened, r_i+1)
-			elseif r_i >= 2 and r_i + 1 <= #rivers and heightmap[r_i-1] <= heightmap[r_i+1] then
+			elseif r_i >= 2 and r_i + 1 <= #gen_data.rivers and gen_data.heightmap[r_i-1] <= gen_data.heightmap[r_i+1] then
 				table.insert(widened, r_i+1)
 			end
-			if r_i - sidelen >= 1 and r_i + sidelen <= #rivers and heightmap[r_i-sidelen] > heightmap[r_i+sidelen] then
+			if r_i - sidelen >= 1 and r_i + sidelen <= #gen_data.rivers and gen_data.heightmap[r_i-sidelen] > gen_data.heightmap[r_i+sidelen] then
 				table.insert(widened, r_i+sidelen)
-			elseif r_i - sidelen >= 1 and r_i + sidelen <= #rivers and heightmap[r_i-sidelen] <= heightmap[r_i+sidelen] then
+			elseif r_i - sidelen >= 1 and r_i + sidelen <= #gen_data.rivers and gen_data.heightmap[r_i-sidelen] <= gen_data.heightmap[r_i+sidelen] then
 				table.insert(widened, r_i+sidelen)
 			end
 			end
@@ -302,12 +309,12 @@ local function get_rivers(sidelen, heightmap, humidmap, rivers)
 			end
 
 			for _, r_i in pairs(river) do
-				rivers[r_i] = true
+				gen_data.rivers[r_i] = true
 				for o_x = -2, 2 do
 				for o_z = -2, 2 do
 					local n_i = r_i + o_x + o_z * sidelen
-					if n_i >= 1 and n_i <= #humidmap then
-						humidmap[n_i] = 1 - (1 - humidmap[n_i]) * 0.95
+					if n_i >= 1 and n_i <= #gen_data.humidmap then
+						gen_data.humidmap[n_i] = 1 - (1 - gen_data.humidmap[n_i]) * 0.95
 					end
 				end
 				end
@@ -333,10 +340,10 @@ core.register_on_generated(function(minp, maxp, seed)
 	local area = VoxelArea:new{MinEdge = emin, MaxEdge = emax}
 	vm:get_data(data)
 
-	heatmap = {}
-	humidmap = {}
-	heightmap = {}
-	rivers = {}
+	gen_data.heatmap = {}
+	gen_data.humidmap = {}
+	gen_data.heightmap = {}
+	gen_data.rivers = {}
 
 	local ni = 1
 	for z = minp.z, maxp.z do
@@ -345,26 +352,27 @@ core.register_on_generated(function(minp, maxp, seed)
 		local h2 = nvals_terrain2[ni]
 		local mountain = math.min(h1*h1, h1*h2) + HEIGHT_OFFSET
 		local plateau = get_plateau_noise(x, z) * .75 + .25
-		heightmap[ni] = mountain * plateau
+		gen_data.heightmap[ni] = mountain * plateau
 
 		local o_x, o_z = n22(x, z)
-		heatmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_heat) * 100 * (1-heightmap[ni]^3)
-		humidmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_humidity) * 100
+		gen_data.heatmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_heat) * 100 * (1-gen_data.heightmap[ni]^3)
+		gen_data.humidmap[ni] = get_climate_noise(x + o_x*BLEND_FACTOR, z + o_z*BLEND_FACTOR, nobj_humidity) * 100
 
-		rivers[ni] = false
+		gen_data.rivers[ni] = false
 
 		ni = ni + 1
 	end
 	end
 
-	get_rivers(sidelen, heightmap, humidmap, rivers)
+	get_rivers(sidelen)
 
 	ni = 1
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
-		local node_height = math.floor(heightmap[ni] * HEIGHT_SCALE)
+		local node_height = math.floor(gen_data.heightmap[ni] * HEIGHT_SCALE)
+		local is_river = gen_data.rivers[ni]
 		-- sink rivers into the ground
-		if rivers[ni] and node_height > 1 then
+		if is_river and node_height > 1 then
 			node_height = node_height - 1
 		end
 
@@ -373,7 +381,7 @@ core.register_on_generated(function(minp, maxp, seed)
 
 			if y <= 0 and y > node_height then
 				data[vi] = c_water
-			elseif y == node_height and y > 0 and rivers[ni] then
+			elseif y == node_height and y > 0 and is_river then
 				data[vi] = c_river
 			elseif y <= node_height then
 				data[vi] = c_stone
@@ -384,7 +392,7 @@ core.register_on_generated(function(minp, maxp, seed)
 	end
 	end
 
-	biomegen.generate_biomes(data, area, minp, maxp, heatmap, humidmap)
+	biomegen.generate_biomes(data, area, minp, maxp, gen_data.heatmap, gen_data.humidmap)
 	vm:set_data(data)
 	core.generate_ores(vm, minp, maxp)
 	biomegen.place_all_decos(data, area, vm, minp, maxp, seed)
