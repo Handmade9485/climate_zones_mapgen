@@ -1,0 +1,80 @@
+[Terrain]
+
+#	Control the scale of your world. This keeps the relative sizes of terrain and climate zones the same.
+climate_zones_world_scale (World Scale) float 1 0.1 10.0
+
+#	Control the size of generated terrain. This leaves the climate zones unchanged.
+#	A value of '100' means that mountains will be at most 100 nodes tall.
+climate_zones_terrain_size (Terrain Size) int 100 25 10000
+
+#	Control the size of tectonic zones. Each of thsese zones have the capacity to be flatter or more mountainous.
+#	A value of '100' means that each zone will be roughly 100 nodes in diameter.
+#	It is recommended to keep this value multiple times higher than the terrain size.
+climate_zones_tectonic_size (Tectonic Size) int 400 100 10000
+
+#	Control the minimum flatness of the tectonic zones.
+#	A minimum of '0' would mean that even the tallest mountains could get reduced to 1 node deep oceans in some zones.
+#	A minimum of '1' would effectively disable the tectonic zones, as all mountains would never get restricted.
+#
+#	Requires: show_advanced
+climate_zones_tectonic_min_flatness (Tectonic Minimum Flatness) float 0.25 0.0 1.0
+
+[Climate]
+
+#	Control the size of climate zones. Each of these zones will have the same climate.
+#	Note that the same climate does not necessarily mean the same biome, due to changes in elevation.
+#	A value of '100' means that each zone will be roughly 100 nodes in diameter.
+climate_zones_climate_size (Climate Scale) int 100 25 1000
+
+#
+climate_zones_climate_spread (Climate Spread) int 256 64 1024
+
+#	Controls the width of the transitions between two climate zones.
+#
+#	Requires: show_advanced
+climate_zones_climate_transition_size (Transition Size) int 10 0 100
+
+[Caves]
+
+#	Control the thickness of the surface in nodes.
+#	In this zone, only small worm-like caves will spawn.
+climate_zones_crust_thickness (Crust Thickness) int 50 5 500
+
+#	Control the depth at which the caves reach their maximum size.
+climate_zones_caves_max_growth_depth (Large Caves Depth) int -8000 -30000 -1000
+
+#	Control how common caves are near the surface.
+#	A value of '0.75' means that roughly 75% of the surface volume is soil, with the remaining 25% being caves.
+#
+#	Requires: show_advanced
+climate_zones_caves_surface_threshold (Max Threshold) float 0.85 0.5 1.0
+
+#	Control how common caves are in the depths.
+#	A value of '0.75' means that roughly 75% of the surface volume is soil, with the remaining 25% being caves.
+#
+#	Requires: show_advanced
+climate_zones_caves_depths_threshold (Max Threshold) float 0.75 0.5 1.0
+
+climate_zones_caves_surface_noise (Surface Cave Noise) noise_params_3d 0, 1, (50, 50, 50), 7, 5, 0.5, 2.0
+
+climate_zones_caves_depths_noise (Deep Cave Noise) noise_params_3d 0, 1, (4096, 1024, 4096), 11, 9, 0.5, 2.0
+
+[Details]
+
+[*Rivulets]
+
+#	Generate small rivulets to add some detail and moisture to your terrain.
+climate_zones_gen_rivulets (Generate Rivulets) bool true
+
+#	Controls the humidity increase around rivulets.
+#	At '0' the rivulets will not add any humidity to their surroundings.
+#	At '1' every node around the rivulet will have maximal humidity.
+#
+#	Requires: climate_zones_gen_rivulets, show_advanced
+climate_zones_rivulet_humidity (Rivulet Humidity) float 0.05 0.0 1.0
+
+#	Controls the radius around rivulets in which the humidity will be increased.
+#	A value of '2' means that there is a 2 node wide band of wetter soil around the rivulet.
+#
+#	Requires: climate_zones_gen_rivulets, show_advanced
+climate_zones_rivulet_humidity_radius (Humidity Radius) int 2 0 5

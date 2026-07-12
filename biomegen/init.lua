@@ -195,11 +195,14 @@ local function generate_biomes(data, a, minp, maxp, heatmap_, humidmap_)
 		initialize_mapgen_data(chulens)
 	end
 
--- 	calculate_noises(minp)
-	heatmap = heatmap_
-	humidmap = humidmap_
-	local minp2d = {x=minp.x, y=minp.z}
-	nobj_filler_depth:get_2d_map_flat(minp2d, nvals_filler_depth)
+	if heatmap_ and humidmap_ then
+		heatmap = heatmap_
+		humidmap = humidmap_
+		local minp2d = {x=minp.x, y=minp.z}
+		nobj_filler_depth:get_2d_map_flat(minp2d, nvals_filler_depth)
+	else
+		calculate_noises(minp)
+	end
 
 	chunk_biomes = {}
 	local index = 1
