@@ -68,15 +68,6 @@ local function make_chunk(minp, maxp, seed)
 	local data = {}
 	vm:get_data(data)
 
-	-- dont even calculate anything if we already know its just gonna be air
-	if minp.y > config.terrain_size then
-		-- Calculate lighting for what has been created.
-		vm:calc_lighting()
-		-- Write what has been created to the world.
-		vm:write_to_map()
-		return
-	end
-
 	local intersects_surface = maxp.y >= -config.terrain_size - config.crust_thickness
 	local sidelen = maxp.x - minp.x + 1
 
@@ -148,7 +139,9 @@ local function make_chunk(minp, maxp, seed)
 		vm:set_data(data)
 	end
 	core.generate_ores(vm, minp, maxp)
-	biomegen.place_all_decos(data, area, vm, minp, maxp, seed)
+	if config.terrain_size > 25 then
+		biomegen.place_all_decos(data, area, vm, minp, maxp, seed)
+	end
 	vm:get_data(data)
 	biomegen.dust_top_nodes(data, area, vm, minp, maxp)
 

@@ -16,38 +16,30 @@ function M.gen_caves(gen_data)
 	nobj_deep_caves = nobj_deep_caves or core.get_value_noise_map(np_depths, dims)
 	nobj_deep_caves:get_3d_map_flat(gen_data.minp, nvals_deep_caves)
 
-	for z = 0, gen_data.sidelen-1 do
 	for y = 0, gen_data.sidelen-1 do
-	for x = 0, gen_data.sidelen-1 do
-		local i = 1 + x + y * gen_data.sidelen + z * gen_data.sidelen^2
-		local surface_caveness = nvals_surface_caves[i] * .5 + .5
-		local deep_caveness = nvals_deep_caves[i] * .5 + .5
-
 		local blend_factor = smoothstep(config.caves_max_growth_depth, config.terrain_size, y + gen_data.minp.y)
-		local caveness = deep_caveness + (surface_caveness - deep_caveness) * blend_factor
-		local cave_threshold = config.caves_depths_threshold + (config.caves_surface_threshold - config.caves_depths_threshold) * blend_factor
+		for z = 0, gen_data.sidelen-1 do
+		for x = 0, gen_data.sidelen-1 do
+			local i = 1 + x + y * gen_data.sidelen + z * gen_data.sidelen^2
+			local surface_caveness = nvals_surface_caves[i] * .5 + .5
+			local deep_caveness = nvals_deep_caves[i] * .5 + .5
 
-		gen_data.caves[i] = caveness > cave_threshold
-	end
-	end
+			local caveness = deep_caveness + (surface_caveness - deep_caveness) * blend_factor
+			local cave_threshold = config.caves_depths_threshold + (config.caves_surface_threshold - config.caves_depths_threshold) * blend_factor
+
+			gen_data.caves[i] = caveness > cave_threshold
+		end
+		end
 	end
 end
 
 local nobj_worm_caves1 = nil
 local nobj_worm_caves2 = nil
 function M.gen_worm_caves(gen_data)
-	local scale = 100 * config.world_scale
-	local np1 = {
-		offset = 0,
-		scale = 1,
-		spread = {x = scale, y = scale, z = scale},
-		seed = 7,
-		octaves = 5,
-		persist = 0.5,
-		lacunarity = 2.0,
-	}
-	local np2 = table.copy(np1)
-	np2.seed = 42
+	local np1 = table.copy(config.caves_tunnel_np)
+	local np2 = table.copy(config.caves_tunnel_np)
+	np1.seed = 42
+	np2.seed = 43
 	local dims = {x=gen_data.sidelen, y=gen_data.sidelen, z=gen_data.sidelen}
 	nobj_worm_caves1 = nobj_worm_caves1 or core.get_value_noise_map(np1, dims)
 	nobj_worm_caves2 = nobj_worm_caves2 or core.get_value_noise_map(np2, dims)

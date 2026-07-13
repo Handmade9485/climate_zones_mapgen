@@ -38,24 +38,26 @@ local function get_plateau_noise(x, y)
 	return sum / w_sum
 end
 
+local function get_max_amplitude(np)
+	return (1 - np.persist^np.octaves) / (1 - np.persist)
+end
+
 local nobj_terrain = nil
 function M.gen_heightmap(gen_data)
-	local p_offset = {x=gen_data.minp.x + config.terrain_size, y=gen_data.minp.z + config.terrain_size}
-	local nvals_terrain1 = {}
-	local nvals_terrain2 = {}
+	local nvals_terrain = {}
 	local dims = {x = gen_data.sidelen, y = gen_data.sidelen, z = gen_data.sidelen}
 
 	nobj_terrain = nobj_terrain or core.get_value_noise_map(config.np_terrain, dims)
-	nobj_terrain:get_2d_map_flat({x=gen_data.minp.x, y=gen_data.minp.z}, nvals_terrain1)
-	nobj_terrain:get_2d_map_flat(p_offset, nvals_terrain2)
+	nobj_terrain:get_2d_map_flat({x=gen_data.minp.x, y=gen_data.minp.z}, nvals_terrain)
+
+	local max_amp = get_max_amplitude(config.np_terrain)
 
 	local ni = 1
 	for z = gen_data.minp.z, gen_data.maxp.z do
 	for x = gen_data.minp.x, gen_data.maxp.x do
-		local h1 = nvals_terrain1[ni]
-		local h2 = nvals_terrain2[ni]
-		local mountain = math.min(h1*h1, h1*h2)
-		local plateau = get_plateau_noise(x, z) * (1 - config.plateau_min_flatness) + config.plateau_min_flatness
+		local h = nvals_terrain[ni] / max_amp
+		local mountain = (1 - math.abs(h)) * 2 - 1
+		local plateau = get_plateau_noise(x, z)^2 * (1 - config.plateau_min_flatness) + config.plateau_min_flatness
 		gen_data.heightmap[ni] = mountain * plateau
 
 		ni = ni + 1

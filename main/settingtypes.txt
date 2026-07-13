@@ -17,7 +17,7 @@ climate_zones_tectonic_size (Tectonic Size) int 400 100 10000
 #	A minimum of '1' would effectively disable the tectonic zones, as all mountains would never get restricted.
 #
 #	Requires: show_advanced
-climate_zones_tectonic_min_flatness (Tectonic Minimum Flatness) float 0.25 0.0 1.0
+climate_zones_tectonic_min_flatness (Tectonic Minimum Flatness) float 0.1 0.0 1.0
 
 [Climate]
 
