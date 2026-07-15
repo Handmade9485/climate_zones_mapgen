@@ -78,7 +78,7 @@ local config = {
 		persist = 0.5,
 		lacunarity = 2.0,
 	},
-	caves_tunnel_threshold = 0.975,
+	caves_tunnel_threshold = 0.95,
 
 	rivulet_enabled = settings:get_bool("climate_zones_gen_rivulets", true),
 	rivulet_humidity_radius = get_num("climate_zones_rivulet_humidity_radius", 2),

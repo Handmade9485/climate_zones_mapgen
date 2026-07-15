@@ -25,7 +25,8 @@ local function get_plateau_noise(x, y)
 
 		local dist_x = p_x - fr_x
 		local dist_y = p_y - fr_y
-		local dist_sq = dist_x * dist_x + dist_y * dist_y
+		-- plus tiny amount so ^-5 still makes sense
+		local dist_sq = dist_x * dist_x + dist_y * dist_y + 1e-9
 
 		local weight = dist_sq ^ -5
 
