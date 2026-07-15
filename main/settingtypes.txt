@@ -55,9 +55,29 @@ climate_zones_caves_surface_threshold (Max Threshold) float 0.85 0.5 1.0
 #	Requires: show_advanced
 climate_zones_caves_depths_threshold (Max Threshold) float 0.75 0.5 1.0
 
+#	Controls the parameters of surface caves.
+#
+#	Requires: show_advanced
 climate_zones_caves_surface_noise (Surface Cave Noise) noise_params_3d 0, 1, (50, 50, 50), 7, 5, 0.5, 2.0
 
+#	Controls the parameters of deep caves.
+#
+#	Requires: show_advanced
 climate_zones_caves_depths_noise (Deep Cave Noise) noise_params_3d 0, 1, (4096, 1024, 4096), 11, 9, 0.5, 2.0
+
+#	Control the frequency of worm-like tunnels.
+#	Smaller spread values produce shorter, more winding tunnels.
+#	Larger spread values produce longer, smoother tunnels.
+#
+#	Requires: show_advanced
+climate_zones_caves_tunnel_noise (Tunnel Noise) noise_params_3d 0, 1, (100, 100, 100), 7, 5, 0.5, 2.0
+
+#	Controls how wide worm-like tunnels are.
+#	Higher values generate thinner tunnels.
+#	Lower values generate wider tunnels.
+#
+#	Requires: show_advanced
+climate_zones_caves_tunnel_threshold (Tunnel Threshold) float 0.95 0.5 1.0
 
 [Details]
 

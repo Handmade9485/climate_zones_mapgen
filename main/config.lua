@@ -69,16 +69,16 @@ local config = {
 		persist = 0.5,
 		lacunarity = 2.0,
 	},
-	caves_tunnel_np = {
+	caves_tunnel_np = settings:get_np_group("climate_zones_caves_tunnel_noise") or {
 		offset = 0,
 		scale = 1,
-		spread = {x = scale, y = scale, z = scale},
+		spread = {x = 100, y = 100, z = 100},
 		seed = 7,
 		octaves = 5,
 		persist = 0.5,
 		lacunarity = 2.0,
 	},
-	caves_tunnel_threshold = 0.95,
+	caves_tunnel_threshold = get_num("climate_zones_caves_tunnel_threshold", 0.95),
 
 	rivulet_enabled = settings:get_bool("climate_zones_gen_rivulets", true),
 	rivulet_humidity_radius = get_num("climate_zones_rivulet_humidity_radius", 2),
@@ -99,10 +99,9 @@ config.caves_depths_np.spread.x = config.caves_depths_np.spread.x * config.world
 config.caves_depths_np.spread.y = config.caves_depths_np.spread.y * config.world_scale
 config.caves_depths_np.spread.z = config.caves_depths_np.spread.z * config.world_scale
 config.caves_depths_np.octaves = cap_octaves(config.caves_depths_np)
--- 100 is just what felt most natural to me, todo configurable
-config.caves_tunnel_np.spread.x = 100 * config.world_scale
-config.caves_tunnel_np.spread.y = 100 * config.world_scale
-config.caves_tunnel_np.spread.z = 100 * config.world_scale
+config.caves_tunnel_np.spread.x = config.caves_tunnel_np.spread.x * config.world_scale
+config.caves_tunnel_np.spread.y = config.caves_tunnel_np.spread.y * config.world_scale
+config.caves_tunnel_np.spread.z = config.caves_tunnel_np.spread.z * config.world_scale
 config.caves_tunnel_np.octaves = cap_octaves(config.caves_tunnel_np)
 
 -- 4 is just a good multiplier to make mountains appear natural
