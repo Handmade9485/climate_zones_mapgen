@@ -59,7 +59,8 @@ function M.gen_heightmap(gen_data)
 		local h = nvals_terrain[ni] / max_amp
 		local mountain = (1 - math.abs(h)) * 2 - 1
 		local plateau = get_plateau_noise(x, z)^2 * (1 - config.plateau_min_flatness) + config.plateau_min_flatness
-		gen_data.heightmap[ni] = mountain * plateau
+		local spawnness = smoothstep(0, config.plateau_size^2, x^2 + z^2)
+		gen_data.heightmap[ni] = mountain * plateau * spawnness
 
 		ni = ni + 1
 	end
