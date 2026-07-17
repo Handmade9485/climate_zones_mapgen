@@ -7,6 +7,13 @@ climate_zones_world_scale (World Scale) float 1 0.1 10.0
 #	A value of '100' means that mountains will be at most 100 nodes tall.
 climate_zones_terrain_size (Terrain Size) int 100 25 10000
 
+#	Control other aspects of the terrain.
+#	Changing Scale is undefined.
+#	The spread gets multiplied by terrain_size. Using higher values will make mountains wider, whereas smaller values will make them steeper.
+#
+#	Requires: show_advanced
+climate_zones_terrain_noise (Terrain Noise) noise_params_2d 0, 1, (4, 4, 4), 2, 999, 0.5, 2.0
+
 #	Control the size of tectonic zones. Each of thsese zones have the capacity to be flatter or more mountainous.
 #	A value of '100' means that each zone will be roughly 100 nodes in diameter.
 #	It is recommended to keep this value multiple times higher than the terrain size.
@@ -24,7 +31,7 @@ climate_zones_tectonic_min_flatness (Tectonic Minimum Flatness) float 0.1 0.0 1.
 #	Control the size of climate zones. Each of these zones will have the same climate.
 #	Note that the same climate does not necessarily mean the same biome, due to changes in elevation.
 #	A value of '100' means that each zone will be roughly 100 nodes in diameter.
-climate_zones_climate_size (Climate Scale) int 100 25 1000
+climate_zones_climate_size (Climate Size) int 100 25 1000
 
 #
 climate_zones_climate_spread (Climate Spread) int 256 64 1024
@@ -58,19 +65,19 @@ climate_zones_caves_depths_threshold (Max Threshold) float 0.75 0.5 1.0
 #	Controls the parameters of surface caves.
 #
 #	Requires: show_advanced
-climate_zones_caves_surface_noise (Surface Cave Noise) noise_params_3d 0, 1, (50, 50, 50), 7, 5, 0.5, 2.0
+climate_zones_caves_surface_noise (Surface Cave Noise) noise_params_3d 0, 1, (50, 50, 50), 7, 999, 0.5, 2.0
 
 #	Controls the parameters of deep caves.
 #
 #	Requires: show_advanced
-climate_zones_caves_depths_noise (Deep Cave Noise) noise_params_3d 0, 1, (4096, 1024, 4096), 11, 9, 0.5, 2.0
+climate_zones_caves_depths_noise (Deep Cave Noise) noise_params_3d 0, 1, (4096, 1024, 4096), 11, 999, 0.5, 2.0
 
 #	Control the frequency of worm-like tunnels.
 #	Smaller spread values produce shorter, more winding tunnels.
 #	Larger spread values produce longer, smoother tunnels.
 #
 #	Requires: show_advanced
-climate_zones_caves_tunnel_noise (Tunnel Noise) noise_params_3d 0, 1, (100, 100, 100), 7, 5, 0.5, 2.0
+climate_zones_caves_tunnel_noise (Tunnel Noise) noise_params_3d 0, 1, (100, 100, 100), 7, 999, 0.5, 2.0
 
 #	Controls how wide worm-like tunnels are.
 #	Higher values generate thinner tunnels.

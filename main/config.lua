@@ -4,7 +4,7 @@ local function get_num(name, default)
 end
 
 local function cap_octaves(np)
-	local min_spread = math.min(np.spread.x, np.spread.y, np.spread.z)
+	local min_spread = math.min(np.spread.x, np.spread.y, np.spread.z or math.huge)
 	local octaves = math.max(
 		1,
 		math.floor(math.log(min_spread / 4) / math.log(np.lacunarity or 2)) + 1
@@ -19,12 +19,12 @@ local config = {
 	terrain_size = get_num("climate_zones_terrain_size", 100),
 	plateau_size = get_num("climate_zones_tectonic_size", 400),
 	plateau_min_flatness = get_num("climate_zones_tectonic_min_flatness", .1),
-	np_terrain = {
+	np_terrain = settings:get_np_group("climate_zones_terrain_noise") or {
 		offset = 0,
 		scale = 1,
-		spread = {},
+		spread = {x = 4, y = 4, z = 4},
 		seed = 2,
-		octaves = 16,
+		octaves = 999,
 		persist = 0.5,
 		lacunarity = 2.0,
 	},
@@ -104,10 +104,8 @@ config.caves_tunnel_np.spread.y = config.caves_tunnel_np.spread.y * config.world
 config.caves_tunnel_np.spread.z = config.caves_tunnel_np.spread.z * config.world_scale
 config.caves_tunnel_np.octaves = cap_octaves(config.caves_tunnel_np)
 
--- 4 is just a good multiplier to make mountains appear natural
-config.np_terrain.spread.x = 4 * config.terrain_size
-config.np_terrain.spread.y = 4 * config.terrain_size
-config.np_terrain.spread.z = 4 * config.terrain_size
+config.np_terrain.spread.x = config.np_terrain.spread.x * config.terrain_size
+config.np_terrain.spread.y = config.np_terrain.spread.y * config.terrain_size
 config.np_terrain.octaves = cap_octaves(config.np_terrain)
 
 config.np_heat.spread.x = config.climate_spread

@@ -46,7 +46,7 @@ end
 local nobj_terrain = nil
 function M.gen_heightmap(gen_data)
 	local nvals_terrain = {}
-	local dims = {x = gen_data.sidelen, y = gen_data.sidelen, z = gen_data.sidelen}
+	local dims = {x = gen_data.sidelen, y = gen_data.sidelen}
 
 	nobj_terrain = nobj_terrain or core.get_value_noise_map(config.np_terrain, dims)
 	nobj_terrain:get_2d_map_flat({x=gen_data.minp.x, y=gen_data.minp.z}, nvals_terrain)
