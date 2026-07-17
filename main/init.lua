@@ -113,7 +113,7 @@ local function make_chunk(minp, maxp, seed)
 			local is_worm_cave = gen_data.worm_caves[ni_3d] or false
 
 			if intersects_surface then
-				if y <= 0 and y > surface_node_height then
+				if y <= 1 and y > surface_node_height then
 					data[vi] = c_water
 				elseif is_worm_cave then
 					-- leave air
