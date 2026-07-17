@@ -1,0 +1,7 @@
+{
+    "type": "MOD",
+    "dev_state": "WIP",
+    "tags": ["mapgen", "custom_mapgen", "library"],
+    "repo": "https://github.com/Handmade9485/climate_zones_mapgen",
+    "ai_disclosure": "ASSISTED"
+}
