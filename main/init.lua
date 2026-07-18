@@ -69,11 +69,14 @@ local function make_chunk(minp, maxp, seed)
 	vm:get_data(data)
 
 	local intersects_surface = maxp.y >= -config.terrain_size - config.crust_thickness
+	local touches_ground = maxp.y <= config.terrain_size
 	local sidelen = maxp.x - minp.x + 1
+	local sidelen2 = sidelen^2
 
 	local gen_data = {
-		size = sidelen^2,
 		sidelen = sidelen,
+		sidelen2 = sidelen2,
+		sidelen3 = sidelen^3,
 		minp = minp,
 		maxp = maxp,
 		heatmap = {},
@@ -94,30 +97,33 @@ local function make_chunk(minp, maxp, seed)
 			rivers.gen_rivulets(gen_data)
 		end
 	end
-	caves.gen_caves(gen_data)
-	caves.gen_worm_caves(gen_data)
+	if touches_ground then
+		caves.gen_caves(gen_data)
+		caves.gen_worm_caves(gen_data)
+	end
 
-	local ni = 1
+	local i_2d = 1
 	local surface_node_height = nil
 	for z = minp.z, maxp.z do
 	for x = minp.x, maxp.x do
 		if intersects_surface then
-			surface_node_height = math.floor(gen_data.heightmap[ni] * config.terrain_size)
+			surface_node_height = math.floor(gen_data.heightmap[i_2d] * config.terrain_size)
 		end
+		local xz_i = 1 + (x-minp.x) + (z-minp.z) * sidelen2
 
 		for y = minp.y, maxp.y do
 			local vi = area:index(x, y, z)
-			local ni_3d = 1 + (x-minp.x) + (y-minp.y) * sidelen + (z-minp.z) * sidelen^2
+			local i_3d = xz_i + (y-minp.y) * sidelen
 
-			local is_cave = gen_data.caves[ni_3d] or false
-			local is_worm_cave = gen_data.worm_caves[ni_3d] or false
+			local is_cave = gen_data.caves[i_3d] or false
+			local is_worm_cave = gen_data.worm_caves[i_3d] or false
 
 			if intersects_surface then
 				if y <= 1 and y > surface_node_height then
 					data[vi] = c_water
 				elseif is_worm_cave then
 					-- leave air
-				elseif gen_data.rivers_depths[ni] and y >= 1 and y <= surface_node_height and y > surface_node_height - gen_data.rivers_depths[ni] then
+				elseif gen_data.rivers_depths[i_2d] and y >= 1 and y <= surface_node_height and y > surface_node_height - gen_data.rivers_depths[i_2d] then
 					data[vi] = c_river
 				elseif y <= surface_node_height and (y > surface_node_height - config.crust_thickness or not is_cave) then
 					data[vi] = c_stone
@@ -127,7 +133,7 @@ local function make_chunk(minp, maxp, seed)
 			end
 		end
 
-		ni = ni + 1
+		i_2d = i_2d + 1
 	end
 	end
 
