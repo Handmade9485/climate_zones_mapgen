@@ -117,7 +117,7 @@ local function make_chunk(minp, maxp, seed)
 					data[vi] = c_water
 				elseif is_worm_cave then
 					-- leave air
-				elseif gen_data.rivers_depths[ni] and y >= 0 and y <= surface_node_height and y > surface_node_height - gen_data.rivers_depths[ni] then
+				elseif gen_data.rivers_depths[ni] and y >= 1 and y <= surface_node_height and y > surface_node_height - gen_data.rivers_depths[ni] then
 					data[vi] = c_river
 				elseif y <= surface_node_height and (y > surface_node_height - config.crust_thickness or not is_cave) then
 					data[vi] = c_stone
