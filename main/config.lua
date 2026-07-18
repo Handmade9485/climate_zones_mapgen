@@ -4,7 +4,7 @@ local function get_num(name, default)
 end
 
 local function cap_octaves(np)
-	local min_spread = math.min(np.spread.x, np.spread.y, np.spread.z or math.huge)
+	local min_spread = math.min(np.spread.x, np.spread.y, np.spread.z)
 	local octaves = math.max(
 		1,
 		math.floor(math.log(min_spread / 4) / math.log(np.lacunarity or 2)) + 1
@@ -106,6 +106,7 @@ config.caves_tunnel_np.octaves = cap_octaves(config.caves_tunnel_np)
 
 config.np_terrain.spread.x = config.np_terrain.spread.x * config.terrain_size
 config.np_terrain.spread.y = config.np_terrain.spread.y * config.terrain_size
+config.np_terrain.spread.z = config.np_terrain.spread.z * config.terrain_size
 config.np_terrain.octaves = cap_octaves(config.np_terrain)
 
 config.np_heat.spread.x = config.climate_spread
