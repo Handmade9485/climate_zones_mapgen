@@ -70,30 +70,18 @@ function M.gen_rivulets(gen_data)
 	end
 
 	if height_diff > (1 / #longest_river) then
-		for i = 1, #longest_river - 1 do
-			local h1 = gen_data.heightmap[i]
-			local h2 = gen_data.heightmap[i+1]
-			local diff = h1 - h2
-			gen_data.heightmap[i] = gen_data.heightmap[i] - .5 * diff
-			gen_data.heightmap[i+1] = gen_data.heightmap[i+1] + .4 * diff
-		end
-
 		local river_banks = {}
 		for _, r_i in pairs(longest_river) do
 			local main_height = gen_data.heightmap[r_i]
 			if r_i >= 2 and r_i + 1 <= gen_data.sidelen2 and gen_data.heightmap[r_i-1] > gen_data.heightmap[r_i+1] then
 				table.insert(river_banks, r_i+1)
-				gen_data.heightmap[r_i+1] = main_height
 			elseif r_i >= 2 and r_i + 1 <= gen_data.sidelen2 and gen_data.heightmap[r_i-1] <= gen_data.heightmap[r_i+1] then
 				table.insert(river_banks, r_i-1)
-				gen_data.heightmap[r_i-1] = main_height
 			end
 			if r_i - gen_data.sidelen >= 1 and r_i + gen_data.sidelen <= gen_data.sidelen2 and gen_data.heightmap[r_i-gen_data.sidelen] > gen_data.heightmap[r_i+gen_data.sidelen] then
 				table.insert(river_banks, r_i + gen_data.sidelen)
-				gen_data.heightmap[r_i + gen_data.sidelen] = main_height
 			elseif r_i - gen_data.sidelen >= 1 and r_i + gen_data.sidelen <= gen_data.sidelen2 and gen_data.heightmap[r_i-gen_data.sidelen] <= gen_data.heightmap[r_i+gen_data.sidelen] then
 				table.insert(river_banks, r_i - gen_data.sidelen)
-				gen_data.heightmap[r_i - gen_data.sidelen] = main_height
 			end
 		end
 		table.move(river_banks, 1, #river_banks, #longest_river + 1, longest_river)
